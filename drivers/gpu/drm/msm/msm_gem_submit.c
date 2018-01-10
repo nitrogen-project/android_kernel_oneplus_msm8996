@@ -34,33 +34,33 @@ static inline void __user *to_user_ptr(u64 address)
 }
 
 static struct msm_gem_submit *submit_create(struct drm_device *dev,
-		struct msm_gpu *gpu, uint32_t nr_cmds, uint32_t nr_bos)
+	struct msm_gpu *gpu, uint32_t nr_cmds, uint32_t nr_bos)
 {
-	struct msm_gem_submit *submit;
-	uint64_t sz = sizeof(*submit) + (nr_bos * sizeof(submit->bos[0])) +
-		(nr_cmds * sizeof(submit->cmd[0]));
+    struct msm_gem_submit *submit;
+    uint64_t sz = sizeof(*submit) + (nr_bos * sizeof(submit->bos[0])) +
+	(nr_cmds * sizeof(submit->cmd[0]));
 
-	if (sz > SIZE_MAX)
-		return NULL;
+    if (sz > SIZE_MAX)
+	return NULL;
 
-	submit = kmalloc(sz, GFP_TEMPORARY | __GFP_NOWARN | __GFP_NORETRY);
-	if (submit) {
-		submit->dev = dev;
-		submit->gpu = gpu;
+    submit = kmalloc(sz, GFP_TEMPORARY | __GFP_NOWARN | __GFP_NORETRY);
+    if (submit) {
+	submit->dev = dev;
+	submit->gpu = gpu;
 
-		/* initially, until copy_from_user() and bo lookup succeeds: */
-		submit->nr_bos = 0;
-		submit->nr_cmds = 0;
+	/* initially, until copy_from_user() and bo lookup succeeds: */
+	submit->nr_bos = 0;
+	submit->nr_cmds = 0;
 
-		submit->cmd = (void *)submit + sizeof(*submit);
-		submit->bos = (void *)submit->cmd +
-			(nr_cmds * sizeof(submit->cmd[0]));
+	submit->cmd = (void *)submit + sizeof(*submit);
+	submit->bos = (void *)submit->cmd +
+	    (nr_cmds * sizeof(submit->cmd[0]));
 
-		INIT_LIST_HEAD(&submit->bo_list);
-		ww_acquire_init(&submit->ticket, &reservation_ww_class);
-	}
+	INIT_LIST_HEAD(&submit->bo_list);
+	ww_acquire_init(&submit->ticket, &reservation_ww_class);
+    }
 
-	return submit;
+    return submit;
 }
 
 static inline unsigned long __must_check
