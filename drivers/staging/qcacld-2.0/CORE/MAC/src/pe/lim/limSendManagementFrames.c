@@ -1489,6 +1489,9 @@ limSendAssocRspMgmtFrame(tpAniSirGlobal pMac,
 
     nBytes += sizeof(tSirMacMgmtHdr) + nPayload;
 
+    if (pSta)
+        nBytes += pSta->mlmStaContext.owe_ie_len;
+
     halstatus = palPktAlloc( pMac->hHdd, HAL_TXRX_FRM_802_11_MGMT,
                              ( tANI_U16 )nBytes, ( void** ) &pFrame,
                              ( void** ) &pPacket );
@@ -1560,6 +1563,11 @@ limSendAssocRspMgmtFrame(tpAniSirGlobal pMac,
         vos_mem_copy( pFrame+sizeof(tSirMacMgmtHdr)+nPayload,
             &addIE[0], addnIELen ) ;
     }
+
+    if (pSta && pSta->mlmStaContext.owe_ie_len)
+        vos_mem_copy(pFrame + sizeof(tSirMacMgmtHdr) + nPayload + addnIELen,
+                                     pSta->mlmStaContext.owe_ie,
+                                     pSta->mlmStaContext.owe_ie_len);
 
     if( ( SIR_BAND_5_GHZ == limGetRFBand(psessionEntry->currentOperChannel))
        || ( psessionEntry->pePersona == VOS_P2P_CLIENT_MODE ) ||
@@ -5902,7 +5910,9 @@ static void lim_tx_mgmt_frame(tpAniSirGlobal mac_ctx,
 			struct sir_mgmt_msg *mb_msg, uint32_t msg_len,
 			void *packet, uint8_t *frame)
 {
+#ifdef TRACE_RECORD
 	tpSirMacFrameCtl fc = (tpSirMacFrameCtl)mb_msg->data;
+#endif
 	eHalStatus hal_status;
 	uint8_t sme_session_id = 0;
 	tpPESession session;
